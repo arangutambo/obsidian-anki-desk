@@ -10,10 +10,28 @@ Write flashcards in your notes; review them in Anki.
   draft you can edit, with gentle quality checks, before it's inserted.
 - **Maths that survives.** `$…$` and `$$…$$` become Anki's `\(…\)` and `\[…\]` with a real
   tokenizer: dollars in code are never maths, and `$p = $` can't swallow the rest of the card.
+- **A calm study dashboard.** Today in minutes, bounded sessions, and a gentle restart after time away (below).
 - **Never deletes.** A card you remove from your notes is tagged `bridge::orphan` in Anki, not
   deleted.
 - **Compatible with Obsidian_to_Anki files.** The same `START`/`END` block syntax and
   `<!--ID: …-->` markers. Existing notes are adopted with their review history intact.
+
+## Study dashboard
+
+Open it from the ribbon (layers icon) or the command **Open study dashboard**.
+
+- **Today, in minutes.** Each deck shows roughly how long its cards will take, timed from your own
+  recent reviews, rather than a count that says nothing about effort.
+- **Bounded sessions.** "10 min" or "20 cards" opens Anki's reviewer on that deck and tracks progress
+  here. When you reach the end you get a gentle notice, not a forced stop (unless you turn that on).
+- **Coming back after a break.** After three or more days away, the first thing you see is a small
+  plan (start with ten minutes on one deck), not the size of the backlog. You can also pause new
+  cards with one click; it shows exactly which Anki presets change, and Resume puts them back.
+- **Cards to rewrite.** Leeches are listed with a link to the note they came from.
+- **Own-time decks.** Decks you list in settings (for example `Languages`) appear in their own
+  section and are never added to the day's total.
+
+The dashboard only talks to Anki while it is visible.
 
 ## Card syntax
 

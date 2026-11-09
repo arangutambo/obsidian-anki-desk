@@ -15,3 +15,29 @@
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
 }
+
+/* Study dashboard */
+.anki-desk-dash { padding: var(--size-4-3); }
+.anki-desk-head { display: flex; align-items: baseline; justify-content: space-between; }
+.anki-desk-head h3 { margin: 0; }
+.anki-desk-total { font-size: var(--font-ui-large); margin: var(--size-4-2) 0 var(--size-4-1); }
+.anki-desk-strong { font-weight: var(--font-semibold); }
+.anki-desk-note, .anki-desk-session {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	padding: var(--size-4-3);
+	margin: var(--size-4-3) 0;
+	background: var(--background-secondary);
+}
+.anki-desk-note p { margin: 0 0 var(--size-4-2); }
+.anki-desk-session progress { width: 100%; margin: var(--size-4-2) 0; }
+.anki-desk-rows { display: flex; flex-direction: column; gap: var(--size-4-2); margin: var(--size-4-3) 0; }
+.anki-desk-row { display: flex; align-items: center; justify-content: space-between; gap: var(--size-4-2); }
+.anki-desk-row-text { min-width: 0; }
+.anki-desk-buttons { display: flex; gap: var(--size-4-1); flex-wrap: wrap; }
+.anki-desk-quiet { background: transparent; box-shadow: none; color: var(--text-muted); }
+.anki-desk-section { margin: var(--size-4-3) 0; }
+.anki-desk-section summary { cursor: pointer; color: var(--text-muted); }
+.anki-desk-section li { margin-bottom: var(--size-4-1); }
+.anki-desk-section li button { margin-left: var(--size-4-1); }
+.anki-desk-foot { margin-top: var(--size-4-4); }

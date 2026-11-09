@@ -21,6 +21,7 @@ import { modelByName } from "./core/models";
 import { formatBlock } from "./core/parse";
 import { BUILTINS, mergeTemplates, parseTemplates, type CardDraft, type Template, type TemplateContext } from "./core/templates";
 import { EMPTY_STATE, sync, type SyncReport, type SyncState, type VaultPort } from "./core/sync";
+import { DashboardView, VIEW_TYPE } from "./view";
 
 interface Settings {
 	ankiUrl: string;
@@ -29,15 +30,33 @@ interface Settings {
 	templatesNote: string;
 	disabledTemplates: string;
 	managedTag: string;
+	/** Top-level decks reviewed on your own time: listed apart, never in the day's total. */
+	separateDecks: string;
+	/** Decks the dashboard ignores. */
+	hiddenDecks: string;
+	sessionMinutes: number;
+	sessionCards: number;
+	/** Send Anki back to the deck list when a session's bound is reached. */
+	hardStop: boolean;
+	/** Presets whose new cards were paused from the dashboard, with the values to restore. */
+	paused: { since: string; configs: { id: number; name: string; perDay: number; deck: string }[] } | null;
 }
+
+type StringKey = { [K in keyof Settings]: Settings[K] extends string ? K : never }[keyof Settings];
 
 const DEFAULTS: Settings = {
 	ankiUrl: "http://127.0.0.1:8765",
-	cardFolders: "pages/Anki",
+	cardFolders: "Flashcards",
 	defaultDeck: "Default",
 	templatesNote: "Anki Desk Templates.md",
 	disabledTemplates: "",
 	managedTag: "bridge",
+	separateDecks: "",
+	hiddenDecks: "Custom Study Session",
+	sessionMinutes: 10,
+	sessionCards: 20,
+	hardStop: false,
+	paused: null,
 };
 
 export default class AnkiDesk extends Plugin {
@@ -56,8 +75,29 @@ export default class AnkiDesk extends Plugin {
 			editorCallback: (editor, view) => new TemplatePicker(this, editor, view as MarkdownView).open(),
 		});
 		this.addCommand({ id: "reload-templates", name: "Reload card templates", callback: () => void this.loadTemplates(true) });
+		this.registerView(VIEW_TYPE, (leaf) => new DashboardView(leaf, this));
+		this.addRibbonIcon("layers", "Open study dashboard", () => void this.openDashboard());
+		this.addCommand({ id: "open-dashboard", name: "Open study dashboard", callback: () => void this.openDashboard() });
 		// Templates live in a note, so they are read once the vault is ready, never at load.
 		this.app.workspace.onLayoutReady(() => void this.loadTemplates(false));
+	}
+
+	/** An AnkiConnect client, or null on mobile where AnkiConnect can't be reached. */
+	anki(): Anki | null {
+		if (!Platform.isDesktopApp) return null;
+		return new Anki(async (body) => (await requestUrl({ url: this.prefs.ankiUrl, method: "POST", body, throw: false })).text);
+	}
+
+	async openDashboard(): Promise<void> {
+		const { workspace } = this.app;
+		let leaf = workspace.getLeavesOfType(VIEW_TYPE)[0];
+		if (!leaf) {
+			const right = workspace.getRightLeaf(false);
+			if (!right) return;
+			await right.setViewState({ type: VIEW_TYPE, active: true });
+			leaf = right;
+		}
+		await workspace.revealLeaf(leaf);
 	}
 
 	async saveSettings(): Promise<void> {
@@ -128,7 +168,8 @@ export default class AnkiDesk extends Plugin {
 		this.syncing = true;
 		const notice = new Notice(dryRun ? "Anki Desk: previewing…" : "Anki Desk: syncing…", 0);
 		try {
-			const anki = new Anki(async (body) => (await requestUrl({ url: this.prefs.ankiUrl, method: "POST", body, throw: false })).text);
+			const anki = this.anki();
+			if (!anki) return;
 			try {
 				await anki.version();
 			} catch {
@@ -312,7 +353,7 @@ class BridgeSettings extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 		const s = this.plugin.prefs;
-		const text = (name: string, desc: string, key: keyof Settings) =>
+		const text = (name: string, desc: string, key: StringKey) =>
 			new Setting(containerEl)
 				.setName(name)
 				.setDesc(desc)
@@ -327,5 +368,33 @@ class BridgeSettings extends PluginSettingTab {
 		text("Templates note", "A note holding your own `anki-template` blocks. They add to, or replace, the built-in templates.", "templatesNote");
 		text("Turned-off templates", "Comma-separated template ids to hide (basic, cloze, sequence, pair, predict, explain).", "disabledTemplates");
 		text("AnkiConnect address", "Local only. Nothing else leaves your computer.", "ankiUrl");
+
+		new Setting(containerEl).setName("Study dashboard").setHeading();
+		text("Own-time decks", "Comma-separated top-level decks (e.g. Languages) listed apart and left out of the day's total.", "separateDecks");
+		text("Hidden decks", "Comma-separated decks the dashboard ignores.", "hiddenDecks");
+		const num = (name: string, desc: string, key: "sessionMinutes" | "sessionCards") =>
+			new Setting(containerEl)
+				.setName(name)
+				.setDesc(desc)
+				.addText((t) =>
+					t.setValue(String(s[key])).onChange(async (v) => {
+						const n = Number(v);
+						if (Number.isFinite(n) && n > 0) {
+							s[key] = Math.round(n);
+							await this.plugin.saveSettings();
+						}
+					}),
+				);
+		num("Session length (minutes)", "The time-boxed session button.", "sessionMinutes");
+		num("Session length (cards)", "The card-count session button.", "sessionCards");
+		new Setting(containerEl)
+			.setName("Stop at the end of a session")
+			.setDesc("Off: a gentle notice when time is up, and you decide. On: Anki also returns to the deck list.")
+			.addToggle((t) =>
+				t.setValue(s.hardStop).onChange(async (v) => {
+					s.hardStop = v;
+					await this.plugin.saveSettings();
+				}),
+			);
 	}
 }
