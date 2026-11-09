@@ -1,0 +1,11 @@
+node_modules/
+main.js
+*.js.map
+.cli.cjs
+data.json
+# Private: quotes the vault, backups of the Anki collection, CLI state and reports.
+DESIGN.md
+.backups/
+.state/
+reports/
+.DS_Store

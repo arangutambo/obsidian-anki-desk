@@ -1,0 +1,10 @@
+{
+	"id": "anki-desk",
+	"name": "Anki Desk",
+	"version": "0.1.0",
+	"minAppVersion": "1.5.0",
+	"description": "Write flashcards in your notes and review them in Anki. Incremental sync over AnkiConnect, card templates as commands, maths that never breaks, and nothing ever deleted.",
+	"author": "Antoine Haddad",
+	"authorUrl": "https://github.com/arangutambo",
+	"isDesktopOnly": false
+}

@@ -1,0 +1,29 @@
+{
+	"name": "obsidian-anki-desk",
+	"version": "0.1.0",
+	"description": "Write flashcards in your notes and review them in Anki: incremental sync, card templates as commands, safe maths.",
+	"main": "main.js",
+	"scripts": {
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"dev": "node esbuild.config.mjs",
+		"test": "vitest run",
+		"typecheck": "tsc -noEmit -skipLibCheck",
+		"cli": "esbuild tools/cli.ts --bundle --platform=node --format=cjs --outfile=.cli.cjs --log-level=error && node .cli.cjs",
+		"lint": "eslint ."
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@types/node": "^20.12.7",
+		"esbuild": "^0.25.12",
+		"eslint": "^10.14.0",
+		"eslint-plugin-obsidianmd": "^0.4.2",
+		"obsidian": "^1.13.1",
+		"typescript": "^5.4.5",
+		"typescript-eslint": "^8.72.2",
+		"vitest": "^3.2.7"
+	},
+	"dependencies": {
+		"marked": "^15.0.12"
+	}
+}
