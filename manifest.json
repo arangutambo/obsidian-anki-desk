@@ -1,7 +1,7 @@
 {
 	"id": "anki-desk",
 	"name": "Anki Desk",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"minAppVersion": "1.7.2",
 	"description": "Write flashcards in your notes and review them in Anki. Incremental sync, card templates as commands, safe maths, and a calm study dashboard that shows today in minutes.",
 	"author": "Antoine Haddad",

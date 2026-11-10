@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-anki-desk",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "Write flashcards in your notes and review them in Anki: incremental sync, card templates as commands, safe maths.",
 	"main": "main.js",
 	"scripts": {

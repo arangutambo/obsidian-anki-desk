@@ -68,6 +68,21 @@ tags: pharm
 Placeholders: `{{selection}}`, `{{selection.firstLine}}`, `{{selection.rest}}`, `{{heading}}`,
 `{{note}}`, `{{deck}}`. A template with a built-in id replaces the built-in.
 
+## For plugin developers
+
+Other plugins can read today's study load and open Anki Desk's card draft through a small,
+versioned API. Copy [`src/api-types.ts`](src/api-types.ts) into your plugin:
+
+```ts
+import { getAnkiDeskApi } from "./anki-desk-api";
+
+const desk = getAnkiDeskApi(this.app); // null if missing, disabled or another major version
+const today = await desk?.dueToday();  // { decks: [{ deck, label, minutes, … }], totalMinutes } or null if Anki is closed
+desk?.draftCard({ templateId: "cloze", selection: text, note: file.basename, deck: "Biology::Cells" }, (block) => editor.replaceSelection(block));
+```
+
+`apiVersion` follows semver: minor versions only add.
+
 ## Requirements and disclosures
 
 - Desktop Anki with the **AnkiConnect** add-on. Syncing is desktop-only; writing cards works on

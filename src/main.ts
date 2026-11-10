@@ -22,6 +22,8 @@ import { formatBlock } from "./core/parse";
 import { BUILTINS, mergeTemplates, parseTemplates, type CardDraft, type Template, type TemplateContext } from "./core/templates";
 import { EMPTY_STATE, sync, type SyncReport, type SyncState, type VaultPort } from "./core/sync";
 import { DashboardView, VIEW_TYPE } from "./view";
+import { ANKI_DESK_API_VERSION, type AnkiDeskApi } from "./api-types";
+import { loadSnapshot } from "./core/snapshot";
 
 interface Settings {
 	ankiUrl: string;
@@ -63,6 +65,50 @@ export default class AnkiDesk extends Plugin {
 	prefs: Settings = { ...DEFAULTS };
 	templates: Template[] = BUILTINS;
 	private syncing = false;
+
+	/**
+	 * The public API for companion plugins (contract in `src/api-types.ts`), reached as
+	 * `app.plugins.getPlugin("anki-desk").api`.
+	 */
+	readonly api: AnkiDeskApi = {
+		apiVersion: ANKI_DESK_API_VERSION,
+		dueToday: async () => {
+			const anki = this.anki();
+			if (!anki) return null;
+			try {
+				await anki.version();
+			} catch {
+				return null;
+			}
+			const p = this.prefs;
+			const s = await loadSnapshot(anki, {
+				separateDecks: p.separateDecks,
+				hiddenDecks: p.hiddenDecks,
+				sessionMinutes: p.sessionMinutes,
+				today: new Date().toLocaleDateString("en-CA"),
+				now: Date.now(),
+			});
+			const decks = s.study.map((r) => ({ deck: r.deck, label: r.label, minutes: r.minutes, newCount: r.newCount, learn: r.learn, review: r.review }));
+			return { decks, totalMinutes: decks.reduce((a, d) => a + d.minutes, 0) };
+		},
+		ensureDeck: async (name: string) => {
+			const anki = this.anki();
+			if (!anki) return false;
+			try {
+				await anki.call("createDeck", { deck: name });
+				return true;
+			} catch {
+				return false;
+			}
+		},
+		templates: () => this.templates.map((t) => ({ id: t.id, label: t.label, description: t.description })),
+		draftCard: (request, insert) => {
+			const t = this.templates.find((x) => x.id === (request.templateId ?? "basic")) ?? this.templates[0];
+			const deck = request.deck ?? this.prefs.defaultDeck;
+			const ctx: TemplateContext = { selection: request.selection, heading: request.heading ?? null, note: request.note, deck };
+			new DraftModal(this.app, t.make(ctx), deck, insert).open();
+		},
+	};
 
 	override async onload(): Promise<void> {
 		this.prefs = { ...DEFAULTS, ...((await this.loadData()) as Partial<Settings>) };
